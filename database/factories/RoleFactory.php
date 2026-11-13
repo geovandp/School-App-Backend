@@ -21,7 +21,10 @@ class RoleFactory extends Factory
             'nama' => fake()->unique()->randomElement([
                 'admin',
                 'teacher',
+                'school administration',
+                'school counselor',
                 'student',
+                'alumni',
             ]),
         ];
     }

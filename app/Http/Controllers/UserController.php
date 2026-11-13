@@ -145,6 +145,8 @@ class UserController extends Controller
                     'id' => $user->id,
                     'email' => $user->email,
                     'role_id' => $user->role_id,
+                    'role_name' => $user->role->nama,
+                    'status' => $user->status ?? null,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,
                 ]
