@@ -9,15 +9,25 @@ class Student extends Model
 {
     use HasFactory;
 
+    protected $table = 'students';
+
     protected $primaryKey = 'user_id';
 
     public $incrementing = false;
 
     protected $fillable = [
-        'nisn',
-        'admission_year',
         'user_id',
+        'nisn',
+        'nis',
+        'admission_year',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'admission_year' => 'integer',
+        ];
+    }
 
     public function user()
     {
@@ -27,5 +37,10 @@ class Student extends Model
     public function enrollments()
     {
         return $this->hasMany(StudentEnrollment::class, 'student_id', 'user_id');
+    }
+
+    public function activeEnrollment()
+    {
+        return $this->hasOne(StudentEnrollment::class, 'student_id', 'user_id')->where('status', 'active');
     }
 }

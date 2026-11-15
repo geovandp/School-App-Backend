@@ -17,8 +17,15 @@ class GradeLevelFactory extends Factory
      */
     public function definition(): array
     {
+        static $levels = ['10', '11', '12'];
+        $level_numbers = array_shift($levels);
+
         return [
-            'level_number' => $this->faker->randomElement([10, 11, 12]),
+            'level_number' => $level_numbers,
         ];
+
+        // return [
+        //     'level_number' => $this->faker->randomElement([10, 11, 12]),
+        // ];
     }
 }

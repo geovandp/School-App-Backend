@@ -17,8 +17,15 @@ class MajorFactory extends Factory
      */
     public function definition(): array
     {
+        static $names = ['IPA', 'IPS', 'RPL', 'TKJ', 'MM'];
+        $nama = array_shift($names);
+
         return [
-            'name' => $this->faker->unique()->randomElement(['IPA', 'IPS', 'RPL', 'TKJ', 'MM']),
+            'name' => $nama,
         ];
+
+        // return [
+        //     'name' => $this->faker->unique()->randomElement(['IPA', 'IPS', 'RPL', 'TKJ', 'MM']),
+        // ];
     }
 }

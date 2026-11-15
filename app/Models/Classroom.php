@@ -9,13 +9,22 @@ class Classroom extends Model
 {
     use HasFactory;
 
+    protected $table = 'classrooms';
+
     protected $fillable = [
-        'name',
-        'status',
         'grade_level_id',
         'academic_year_id',
         'major_id',
+        'name',
+        'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => 'boolean',
+        ];
+    }
 
     public function gradeLevel()
     {
@@ -34,6 +43,6 @@ class Classroom extends Model
 
     public function enrollments()
     {
-        return $this->hasMany(StudentEnrollment::class);
+        return $this->hasMany(StudentEnrollment::class, 'classroom_id');
     }
 }

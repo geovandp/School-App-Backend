@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('students', function (Blueprint $table) {
             // $table->id();
-            $table->foreignId('user_id')->primary()->constrained('users')->onDelete('cascade');
-            $table->string('nisn')->unique()->nullable();
-            $table->year('admission_year')->nullable();
-            // $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->primary()->constrained('users')->cascadeOnDelete();
+            $table->string('nisn', 10)->unique()->nullable();
+            $table->string('nis', 10)->unique()->nullable();
+            $table->smallInteger('admission_year')->nullable();
             $table->timestamps();
         });
     }

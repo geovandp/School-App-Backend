@@ -13,12 +13,21 @@ return new class extends Migration
     {
         Schema::create('student_enrollments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('student_id')->constrained('students', 'user_id')->cascadeOnDelete();
+            $table->foreignId('classroom_id')->constrained('classrooms')->restrictOnDelete();
             $table->date('enrollment_date');
-            $table->string('status')->default('active');
+            $table->enum('status', [
+                'active',
+                'completed',
+                'transferred',
+                'withdrawn',
+            ])->default('active');
             $table->date('exit_date')->nullable();
             $table->text('notes')->nullable();
-            $table->foreignId('student_id')->constrained('students', 'user_id')->onDelete('cascade');
-            $table->foreignId('classroom_id')->constrained('classrooms')->onDelete('cascade');
+            $table->index(
+                ['student_id', 'status'],
+                'student_enrollments_student_status_index'
+            );
             $table->timestamps();
         });
     }

@@ -13,11 +13,17 @@ return new class extends Migration
     {
         Schema::create('classrooms', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('grade_level_id')->constrained('grade_levels')->restrictOnDelete();
+            $table->foreignId('academic_year_id')->constrained('academic_years')->restrictOnDelete();
+            $table->foreignId('major_id')->constrained('majors')->restrictOnDelete();
             $table->string('name');
             $table->boolean('status')->default(true);
-            $table->foreignId('grade_level_id')->constrained('grade_levels')->onDelete('cascade');
-            $table->foreignId('academic_year_id')->constrained('academic_years')->onDelete('cascade');
-            $table->foreignId('major_id')->constrained('majors')->onDelete('cascade');
+            $table->unique([
+                'name',
+                'grade_level_id',
+                'academic_year_id',
+                'major_id',
+            ], 'classrooms_unique_class');
             $table->timestamps();
         });
     }

@@ -17,15 +17,23 @@ class RoleFactory extends Factory
      */
     public function definition(): array
     {
+        static $names = ['admin', 'teacher', 'school administration', 'school counselor', 'student', 'alumni'];
+        $nama = array_shift($names);
+
         return [
-            'nama' => fake()->unique()->randomElement([
-                'admin',
-                'teacher',
-                'school administration',
-                'school counselor',
-                'student',
-                'alumni',
-            ]),
+            'nama' => $nama,
         ];
+
+
+        // return [
+        //     'nama' => fake()->unique()->randomElement([
+        //         'admin',
+        //         'teacher',
+        //         'school administration',
+        //         'school counselor',
+        //         'student',
+        //         'alumni',
+        //     ]),
+        // ];
     }
 }
