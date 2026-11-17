@@ -45,4 +45,9 @@ class Classroom extends Model
     {
         return $this->hasMany(StudentEnrollment::class, 'classroom_id');
     }
+
+    public function teachingAssignments()
+    {
+        return $this->hasMany(TeachingAssignment::class, 'classroom_id');
+    }
 }
