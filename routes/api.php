@@ -28,4 +28,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/change-password', [AuthController::class, 'changePassword']);
     });
 
+    // Teacher API Routes
+    require __DIR__.'/teacher.php';
+
 });
