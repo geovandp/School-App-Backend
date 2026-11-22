@@ -11,12 +11,10 @@ class Student extends Model
 
     protected $table = 'students';
 
-    protected $primaryKey = 'user_id';
-
-    public $incrementing = false;
+    protected $primaryKey = 'id';
 
     protected $fillable = [
-        'user_id',
+        'profile_id',
         'nisn',
         'nis',
         'admission_year',
@@ -29,18 +27,18 @@ class Student extends Model
         ];
     }
 
-    public function user()
+    public function profile()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(UserProfile::class, 'profile_id', 'id');
     }
 
     public function enrollments()
     {
-        return $this->hasMany(StudentEnrollment::class, 'student_id', 'user_id');
+        return $this->hasMany(StudentEnrollment::class, 'student_id', 'id');
     }
 
     public function activeEnrollment()
     {
-        return $this->hasOne(StudentEnrollment::class, 'student_id', 'user_id')->where('status', 'active');
+        return $this->hasOne(StudentEnrollment::class, 'student_id', 'id')->where('status', 'active');
     }
 }

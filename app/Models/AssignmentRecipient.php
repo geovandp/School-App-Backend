@@ -34,7 +34,7 @@ class AssignmentRecipient extends Model
 
     public function student(): BelongsTo
     {
-        return $this->belongsTo(Student::class, 'student_id', 'user_id');
+        return $this->belongsTo(Student::class, 'student_id', 'id');
     }
 
     public function submissions(): HasMany

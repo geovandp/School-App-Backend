@@ -28,7 +28,7 @@ class TeacherSeeder extends Seeder
     public function run(): void
     {
         // 1. Pastikan Role Teacher ada
-        $teacherRole = Role::firstOrCreate(['nama' => 'teacher']);
+        $teacherRole = Role::firstOrCreate(['name' => 'teacher']);
 
         // 2. Buat User Guru Aktif
         $teacherUser = User::updateOrCreate(
@@ -201,7 +201,7 @@ class TeacherSeeder extends Seeder
         );
 
         // 8. Dummy Siswa & Enrollment untuk kelas X RPL 1
-        $studentRole = Role::firstOrCreate(['nama' => 'student']);
+        $studentRole = Role::firstOrCreate(['name' => 'student']);
         for ($i = 1; $i <= 3; $i++) {
             $studentUser = User::updateOrCreate(
                 ['email' => "siswa{$i}@sekolah.sch.id"],

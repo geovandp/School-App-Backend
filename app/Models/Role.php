@@ -14,11 +14,12 @@ class Role extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'nama',
+        'code',
+        'name',
     ];
 
-    public function users()
+    public function profiles()
     {
-        return $this->hasMany(User::class, 'role_id');
+        return $this->hasMany(UserProfile::class, 'role_id', 'id');
     }
 }

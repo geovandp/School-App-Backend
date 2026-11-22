@@ -11,6 +11,8 @@ class StudentEnrollment extends Model
 
     protected $table = 'student_enrollments';
 
+    protected $primaryKey = 'id';
+
     protected $fillable = [
         'student_id',
         'classroom_id',
@@ -30,7 +32,7 @@ class StudentEnrollment extends Model
 
     public function student()
     {
-        return $this->belongsTo(Student::class, 'student_id', 'user_id');
+        return $this->belongsTo(Student::class, 'student_id', 'id');
     }
 
     public function classroom()

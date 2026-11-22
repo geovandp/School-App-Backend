@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class UserProfile extends Model
 {
     use HasFactory;
-    
-    protected $primaryKey = 'user_id';
 
-    public $incrementing = false;
+    protected $table = 'user_profiles';
+    
+    protected $primaryKey = 'id';
 
     protected $fillable = [
-        'user_id',
+        'role_id',
         'full_name',
         'preferred_name',
         'gender',
@@ -25,8 +25,30 @@ class UserProfile extends Model
         'avatar_path',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'birth_date' => 'date',
+        ];
+    }
+
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->hasOne(User::class, 'profile_id', 'id');
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'id');
+    }
+
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'profile_id', 'id');
+    }
+
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class, 'profile_id', 'id');
     }
 }

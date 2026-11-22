@@ -3,284 +3,425 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Role;
+use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
+    public function index()
+    {
+        try {
+            $profiles = UserProfile::with([
+                'role',
+                'student',
+                'teacher',
+                'user:id,profile_id,email,status',
+            ])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data user berhasil diambil.',
+                'data' => $profiles,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengambil data user.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     /**
      *
      */
-    // public function login(Request $request)
-    // {
-    //     $data = $request->validate([
-    //         'email' => ['required', 'email'],
-    //         'password' => ['required', 'string'],
-    //     ], [
-    //         'email.required' => 'Email wajib diisi.',
-    //         'email.email' => 'Format email tidak valid.',
-    //         'password.required' => 'Password wajib diisi.',
-    //     ]);
+    public function store(Request $request)
+    {
+        try {
+            $request->validate([
+                'role_id' => [
+                    'required',
+                    'integer',
+                    'exists:roles,id',
+                ],
+            ], [
+                'role_id.required' => 'Role wajib dipilih.',
+                'role_id.exists' => 'Role yang dipilih tidak ditemukan.',
+            ]);
 
-    //     $user = User::where('email', $data['email'])->first();
+            $role = Role::findOrFail($request->role_id);
+            $rules = [
+                'full_name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
+                'preferred_name' => [
+                    'nullable',
+                    'string',
+                    'max:50',
+                ],
+                'gender' => [
+                    'nullable',
+                    Rule::in(['Male', 'Female']),
+                ],
+                'birth_place' => [
+                    'nullable',
+                    'string',
+                    'max:50',
+                ],
+                'birth_date' => [
+                    'nullable',
+                    'date',
+                ],
+                'address' => [
+                    'nullable',
+                    'string',
+                    'max:100',
+                ],
+                'phone' => [
+                    'nullable',
+                    'string',
+                    'max:14',
+                ],
+                'avatar_path' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
+            ];
 
-    //     if (!$user) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Email atau password salah.',
-    //         ], 401);
-    //     }
-    //     if (!Hash::check($data['password'], $user->password)) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Email atau password salah.',
-    //         ], 401);
-    //     }
-    //     if ($user->status !== 'active') {
-    //         $messages = [
-    //             'pending' => 'Akun masih menunggu persetujuan admin.',
-    //             'suspended' => 'Akun sedang ditangguhkan. Silakan hubungi admin.',
-    //             'inactive' => 'Akun telah dinonaktifkan. Silakan hubungi admin.',
-    //         ];
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => $messages[$user->status]
-    //                 ?? 'Status akun tidak valid.',
-    //             'status' => $user->status,
-    //         ], 403);
-    //     }
+            // Validasi berdasarkan role
+            if ($role->code === 'student') {
+                $rules = array_merge($rules, [
+                    'nisn' => [
+                        'required',
+                        'string',
+                        'size:10',
+                        'unique:students,nisn',
+                    ],
+                    'nis' => [
+                        'required',
+                        'string',
+                        'size:10',
+                        'unique:students,nis',
+                    ],
+                    'admission_year' => [
+                        'required',
+                        'integer',
+                        'digits:4',
+                    ],
+                ]);
 
-    //     $tokenName = 'access_token';
-    //     $expiration = config('sanctum.expiration');
+            } elseif ($role->code === 'teacher') {
+                $rules = array_merge($rules, [
+                    'nip' => [
+                        'required',
+                        'string',
+                        'max:18',
+                        'unique:teachers,nip',
+                    ],
+                    'nuptk' => [
+                        'required',
+                        'string',
+                        'max:16',
+                        'unique:teachers,nuptk',
+                    ],
+                    'employment_status' => [
+                        'required',
+                        Rule::in([
+                            'permanent',
+                            'contract',
+                            'honorary',
+                        ]),
+                    ],
+                    'hire_date' => [
+                        'required',
+                        'date',
+                    ],
+                ]);
+            }
 
-    //     return DB::transaction(function () use (
-    //         $user,
-    //         $tokenName,
-    //         $expiration
-    //     ) {
-    //         $lockedUser = User::with('role')
-    //             ->where('id', $user->id)
-    //             ->lockForUpdate()
-    //             ->firstOrFail();
+            // Melakukan validasi seluruh data
+            $validated = $request->validate($rules, [
+                // student validation
+                'full_name.required' => 'Nama lengkap wajib diisi.',
+                'nisn.required' => 'NISN wajib diisi.',
+                'nisn.size' => 'NISN harus terdiri dari 10 karakter.',
+                'nisn.unique' => 'NISN sudah digunakan.',
+                'nis.required' => 'NIS wajib diisi.',
+                'nis.size' => 'NIS harus terdiri dari 10 karakter.',
+                'nis.unique' => 'NIS sudah digunakan.',
+                'admission_year.required' => 'Tahun masuk wajib diisi.',
+                'admission_year.digits' => 'Tahun masuk harus terdiri dari 4 digit.',
 
-    //         $tokens = $lockedUser->tokens()->get();
+                // teacher validation
+                'nip.required' => 'NIP wajib diisi.',
+                'nip.unique' => 'NIP sudah digunakan.',
+                'nip.max' => 'NIP maksimal 18 karakter.',
+                'nuptk.required' => 'NUPTK wajib diisi.',
+                'nuptk.unique' => 'NUPTK sudah digunakan.',
+                'nuptk.max' => 'NUPTK maksimal 16 karakter.',
+                'employment_status.required' => 'Status kepegawaian wajib dipilih.',
+                'employment_status.in' => 'Status kepegawaian tidak valid.',
+                'hire_date.required' => 'Tanggal mulai bekerja wajib diisi.',
+                'hire_date.date' => 'Format tanggal mulai bekerja tidak valid.',
+            ]);
 
-    //         $hasActiveToken = false;
+            $profile = DB::transaction(function () use ($validated, $role) {
+                $profile = UserProfile::create([
+                    'role_id' => $role->id,
+                    'full_name' => $validated['full_name'],
+                    'preferred_name' => $validated['preferred_name'] ?? null,
+                    'gender' => $validated['gender'] ?? null,
+                    'birth_place' => $validated['birth_place'] ?? null,
+                    'birth_date' => $validated['birth_date'] ?? null,
+                    'address' => $validated['address'] ?? null,
+                    'phone' => $validated['phone'] ?? null,
+                    'avatar_path' => $validated['avatar_path'] ?? null,
+                ]);
 
-    //         foreach ($tokens as $existingToken) {
-    //             $withinGlobalExpiration = is_null($expiration)
-    //                 || $existingToken->created_at->gt(
-    //                     now()->subMinutes((int) $expiration)
-    //                 );
+                if ($role->code === 'student') {
+                    $profile->student()->create([
+                        'nisn' => $validated['nisn'],
+                        'nis' => $validated['nis'],
+                        'admission_year' => $validated['admission_year'],
+                    ]);
 
-    //             $withinTokenExpiration = is_null($existingToken->expires_at)
-    //                 || $existingToken->expires_at->isFuture();
+                }
+                elseif ($role->code === 'teacher') {
+                    $profile->teacher()->create([
+                        'nip' => $validated['nip'],
+                        'nuptk' => $validated['nuptk'],
+                        'employment_status' => $validated['employment_status'],
+                        'hire_date' => $validated['hire_date'],
+                    ]);
+                }
+                return $profile;
+            });
 
-    //             $isValid = $withinGlobalExpiration
-    //                 && $withinTokenExpiration;
+            $profile->load([
+                'role',
+                'student',
+                'teacher',
+            ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Data user berhasil ditambahkan.',
+                'data' => $profile,
+            ], 201);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menambahkan data user.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
-    //             if ($isValid) {
-    //                 $hasActiveToken = true;
-    //             } else {
-    //                 $existingToken->delete();
-    //             }
-    //         }
+    public function show($id)
+    {
+        try {
+            $profile = UserProfile::with([
+                'role',
+                // Data murid
+                'user:id,profile_id,email,status',
+                'student.activeEnrollment.classroom.gradeLevel',
+                'student.activeEnrollment.classroom.major',
+                'student.activeEnrollment.classroom.academicYear',
 
-    //         if ($hasActiveToken) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Akun sedang digunakan pada perangkat lain. Silakan logout dari perangkat sebelumnya atau tunggu hingga sesi berakhir.',
-    //                 'error_code' => 'ACCOUNT_ALREADY_LOGGED_IN',
-    //             ], 409);
-    //         }
+                // Data guru
+                'teacher',
+            ])->find($id);
 
-    //         $token = $lockedUser->createToken(
-    //             $tokenName,
-    //             ['access']
-    //         )->plainTextToken;
+            if (!$profile) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data user tidak ditemukan.',
+                ], 404);
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Detail data user berhasil diambil.',
+                'data' => $profile,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengambil detail data user.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Login berhasil.',
-    //             'access_token' => $token,
-    //             'token_type' => 'Bearer',
-    //             'expires_in' => $expiration
-    //                 ? $expiration * 60
-    //                 : null,
-    //             'user' => [
-    //                 'id' => $lockedUser->id,
-    //                 'email' => $lockedUser->email,
-    //                 'role_id' => $lockedUser->role_id,
-    //                 'role_name' => $lockedUser->role?->nama,
-    //                 'status' => $lockedUser->status,
-    //             ],
-    //         ], 200);
-    //     });
-    // }
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'role_id' => [
+                'required',
+                'integer',
+                'exists:roles,id',
+            ],
+        ], [
+            'role_id.required' => 'Role wajib dipilih.',
+            'role_id.exists' => 'Role yang dipilih tidak ditemukan.',
+        ]);
 
+        $profile = UserProfile::findOrFail($id);
+        $role = Role::findOrFail($request->role_id);
+        $student = $profile->student;
+        $teacher = $profile->teacher;
 
-    // public function me(Request $request)
-    // {
-    //     try {
-    //         $user = $request->user();
+        // Validasi data umum
+        $rules = [
+            'full_name' => ['required', 'string', 'max:255'],
+            'preferred_name' => ['nullable', 'string', 'max:50'],
+            'gender' => ['nullable', Rule::in(['Male', 'Female'])],
+            'birth_place' => ['nullable', 'string', 'max:50'],
+            'birth_date' => ['nullable', 'date'],
+            'address' => ['nullable', 'string', 'max:100'],
+            'phone' => ['nullable', 'string', 'max:14'],
+            'avatar_path' => ['nullable', 'string', 'max:255'],
+        ];
 
-    //         if (!$user) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'User tidak ditemukan'
-    //             ], 401);
-    //         }
+        // Validasi tambahan jika role yang dipilih adalah student
+        if ($role->code === 'student') {
+            $rules = array_merge($rules, [
+                'nisn' => [
+                    'required',
+                    'string',
+                    'size:10',
+                    Rule::unique('students', 'nisn')->ignore($student?->id),
+                ],
+                'nis' => [
+                    'required',
+                    'string',
+                    'size:10',
+                    Rule::unique('students', 'nis')->ignore($student?->id),
+                ],
+                'admission_year' => [
+                    'required',
+                    'integer',
+                    'digits:4',
+                ],
+            ]);
+        }
 
-    //         // Mengambil informasi akun, profil, dan data akademik
-    //         $user->load([
-    //             'role',
-    //             'profile',
-    //         ]);
+        // Validasi tambahan jika role yang dipilih adalah teacher
+        elseif ($role->code === 'teacher') {
+            $rules = array_merge($rules, [
+                'nip' => [
+                    'required',
+                    'string',
+                    'max:18',
+                    Rule::unique('teachers', 'nip')->ignore($teacher?->id),
+                ],
+                'nuptk' => [
+                    'required',
+                    'string',
+                    'max:16',
+                    Rule::unique('teachers', 'nuptk')->ignore($teacher?->id),
+                ],
+                'employment_status' => [
+                    'required',
+                    Rule::in(['permanent', 'contract', 'honorary']),
+                ],
+                'hire_date' => [
+                    'required',
+                    'date',
+                ],
+            ]);
+        }
 
-    //         // Jika role student, ambil informasi akademik
-    //         if ($user->role?->nama === 'student') {
-    //             $user->load([
-    //                 'student.activeEnrollment.classroom.gradeLevel',
-    //                 'student.activeEnrollment.classroom.major',
-    //                 'student.activeEnrollment.classroom.academicYear',
-    //             ]);
-    //         }
+        // Jalankan validasi
+        $validated = $request->validate($rules, [
+            'full_name.required' => 'Nama lengkap wajib diisi.',
+            'nisn.required' => 'NISN wajib diisi.',
+            'nisn.size' => 'NISN harus terdiri dari 10 karakter.',
+            'nisn.unique' => 'NISN sudah digunakan.',
+            'nis.required' => 'NIS wajib diisi.',
+            'nis.size' => 'NIS harus terdiri dari 10 karakter.',
+            'nis.unique' => 'NIS sudah digunakan.',
+            'admission_year.required' => 'Tahun masuk wajib diisi.',
+            'admission_year.digits' => 'Tahun masuk harus terdiri dari 4 digit.',
+            'nip.required' => 'NIP wajib diisi.',
+            'nip.unique' => 'NIP sudah digunakan.',
+            'nip.max' => 'NIP maksimal 18 karakter.',
+            'nuptk.required' => 'NUPTK wajib diisi.',
+            'nuptk.unique' => 'NUPTK sudah digunakan.',
+            'nuptk.max' => 'NUPTK maksimal 16 karakter.',
+            'employment_status.required' => 'Status kepegawaian wajib dipilih.',
+            'employment_status.in' => 'Status kepegawaian tidak valid.',
+            'hire_date.required' => 'Tanggal mulai bekerja wajib diisi.',
+            'hire_date.date' => 'Format tanggal mulai bekerja tidak valid.',
+        ]);
 
-    //         // Menyiapkan informasi student
-    //         $studentData = null;
+        try {
+            DB::transaction(function () use ($profile, $role, $validated) {
+                $profile->update([
+                    'role_id' => $role->id,
+                    'full_name' => $validated['full_name'],
+                    'preferred_name' => $validated['preferred_name'] ?? null,
+                    'gender' => $validated['gender'] ?? null,
+                    'birth_place' => $validated['birth_place'] ?? null,
+                    'birth_date' => $validated['birth_date'] ?? null,
+                    'address' => $validated['address'] ?? null,
+                    'phone' => $validated['phone'] ?? null,
+                    'avatar_path' => $validated['avatar_path'] ?? null,
+                ]);
 
-    //         if ($user->role?->nama === 'student' && $user->student) {
+                if ($role->code === 'student') {
+                    $profile->student()->updateOrCreate(
+                        [],
+                        [
+                            'nisn' => $validated['nisn'],
+                            'nis' => $validated['nis'],
+                            'admission_year' => $validated['admission_year'],
+                        ]
+                    );
+                }
+                elseif ($role->code === 'teacher') {
+                    $profile->teacher()->updateOrCreate(
+                        [],
+                        [
+                            'nip' => $validated['nip'],
+                            'nuptk' => $validated['nuptk'],
+                            'employment_status' => $validated['employment_status'],
+                            'hire_date' => $validated['hire_date'],
+                        ]
+                    );
+                }
+            });
 
-    //             $student = $user->student;
-    //             $enrollment = $student->activeEnrollment;
-    //             $classroom = $enrollment?->classroom;
-
-    //             $studentData = [
-    //                 'nisn' => $student->nisn,
-    //                 'admission_year' => $student->admission_year,
-    //                 'enrollment' => $enrollment ? [
-    //                     'enrollment_date' => $enrollment->enrollment_date,
-    //                     'status' => $enrollment->status,
-    //                     'exit_date' => $enrollment->exit_date,
-    //                     'notes' => $enrollment->notes,
-    //                 ] : null,
-    //                 'classroom' => $classroom ? [
-    //                     'id' => $classroom->id,
-    //                     'name' => $classroom->name,
-    //                     'status' => $classroom->status,
-    //                     'grade_level' => $classroom->gradeLevel ? [
-    //                         'id' => $classroom->gradeLevel->id,
-    //                         'level_number' => $classroom->gradeLevel->level_number,
-    //                     ] : null,
-    //                     'major' => $classroom->major ? [
-    //                         'id' => $classroom->major->id,
-    //                         'name' => $classroom->major->name,
-    //                     ] : null,
-    //                     'academic_year' => $classroom->academicYear ? [
-    //                         'id' => $classroom->academicYear->id,
-    //                         'name' => $classroom->academicYear->name,
-    //                         'start_date' => $classroom->academicYear->start_date,
-    //                         'end_date' => $classroom->academicYear->end_date,
-    //                         'is_active' => $classroom->academicYear->is_active,
-    //                     ] : null,
-    //                 ] : null,
-    //             ];
-    //         }
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Data user berhasil diambil',
-    //             'user' => [
-    //                 'id' => $user->id,
-    //                 'email' => $user->email,
-    //                 'role_id' => $user->role_id,
-    //                 'role_name' => $user->role?->nama,
-    //                 'status' => $user->status,
-    //                 'profile' => $user->profile ? [
-    //                     'id' => $user->profile->id,
-    //                     'full_name' => $user->profile->full_name,
-    //                     'preferred_name' => $user->profile->preferred_name,
-    //                     'gender' => $user->profile->gender,
-    //                     'birth_place' => $user->profile->birth_place,
-    //                     'birth_date' => $user->profile->birth_date,
-    //                     'address' => $user->profile->address,
-    //                     'phone' => $user->profile->phone,
-    //                     'avatar_path' => $user->profile->avatar_path,
-    //                 ] : null,
-    //                 'student' => $studentData,
-    //                 'created_at' => $user->created_at,
-    //                 'updated_at' => $user->updated_at,
-    //             ]
-    //         ]);
-
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Terjadi kesalahan server',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
-
-    // // public function me(Request $request)
-    // // {
-    // //     try {
-    // //         $user = $request->user();
-            
-    // //         if (!$user) {
-    // //             return response()->json([
-    // //                 'success' => false,
-    // //                 'message' => 'User tidak ditemukan'
-    // //             ], 401);
-    // //         }
-
-    // //         $user->load([
-    // //             'role',
-    // //             'profile'
-    // //         ]);
-
-    // //         return response()->json([
-    // //             'success' => true,
-    // //             'message' => 'Data user berhasil diambil',
-    // //             'user' => [
-    // //                 'id' => $user->id,
-    // //                 'email' => $user->email,
-    // //                 'role_id' => $user->role_id,
-    // //                 'role_name' => $user->role->nama,
-    // //                 'status' => $user->status,
-    // //                 'profile' => $user->profile ? [
-    // //                     'id' => $user->profile->id,
-    // //                     'full_name' => $user->profile->full_name,
-    // //                     'preferred_name' => $user->profile->preferred_name,
-    // //                     'gender' => $user->profile->gender,
-    // //                     'birth_place' => $user->profile->birth_place,
-    // //                     'birth_date' => $user->profile->birth_date,
-    // //                     'address' => $user->profile->address,
-    // //                     'phone' => $user->profile->phone,
-    // //                     'avatar_path' => $user->profile->avatar_path,
-    // //                 ] : null,
-    // //                 'created_at' => $user->created_at,
-    // //                 'updated_at' => $user->updated_at,
-    // //             ]
-    // //         ]);
-    // //     } catch (\Exception $e) {
-    // //         return response()->json([
-    // //             'success' => false,
-    // //             'message' => 'Terjadi kesalahan server',
-    // //             'error' => $e->getMessage()
-    // //         ], 500);
-    // //     }
-    // // }
-
-    // public function logout(Request $request)
-    // {
-    //     $request->user()->currentAccessToken()->delete();
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Logout berhasil.',
-    //     ], 200);
-    // }
+            // Ambil kembali data lengkap setelah diperbarui
+            $profile->load([
+                'role',
+                'user:id,profile_id,email,status',
+                'student.activeEnrollment.classroom.gradeLevel',
+                'student.activeEnrollment.classroom.major',
+                'student.activeEnrollment.classroom.academicYear',
+                'teacher',
+            ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Data user berhasil diperbarui.',
+                'data' => $profile,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memperbarui data user.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

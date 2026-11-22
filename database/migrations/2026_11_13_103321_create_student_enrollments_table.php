@@ -13,8 +13,12 @@ return new class extends Migration
     {
         Schema::create('student_enrollments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained('students', 'user_id')->cascadeOnDelete();
-            $table->foreignId('classroom_id')->constrained('classrooms')->restrictOnDelete();
+            $table->foreignId('student_id')
+                ->constrained('students', 'id')
+                ->cascadeOnDelete();
+            $table->foreignId('classroom_id')
+                ->constrained('classrooms', 'id')
+                ->restrictOnDelete();
             $table->date('enrollment_date');
             $table->enum('status', [
                 'active',

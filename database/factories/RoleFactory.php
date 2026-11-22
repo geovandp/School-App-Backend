@@ -17,23 +17,38 @@ class RoleFactory extends Factory
      */
     public function definition(): array
     {
-        static $names = ['admin', 'teacher', 'school administration', 'school counselor', 'student', 'alumni'];
-        $nama = array_shift($names);
-
-        return [
-            'nama' => $nama,
+        static $roles = [
+            [
+                'code' => 'admin',
+                'name' => 'Admin',
+            ],
+            [
+                'code' => 'teacher',
+                'name' => 'Teacher',
+            ],
+            [
+                'code' => 'school_administration',
+                'name' => 'School Administration',
+            ],
+            [
+                'code' => 'school_counselor',
+                'name' => 'School Counselor',
+            ],
+            [
+                'code' => 'student',
+                'name' => 'Student',
+            ],
+            [
+                'code' => 'alumni',
+                'name' => 'Alumni',
+            ],
         ];
 
+        $role = array_shift($roles);
 
-        // return [
-        //     'nama' => fake()->unique()->randomElement([
-        //         'admin',
-        //         'teacher',
-        //         'school administration',
-        //         'school counselor',
-        //         'student',
-        //         'alumni',
-        //     ]),
-        // ];
+        return $role ?? [
+            'code' => fake()->unique()->slug(2),
+            'name' => fake()->jobTitle(),
+        ];
     }
 }

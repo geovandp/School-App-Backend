@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::create('teachers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')
+            $table->foreignId('profile_id')
                 ->unique()
-                ->constrained('users')
-                ->cascadeOnDelete();
+                ->constrained('user_profiles')
+                ->restrictOnDelete();
             $table->string('nip', 18)->nullable()->unique()->comment('Nomor Induk Pegawai');
             $table->string('nuptk', 16)->nullable()->unique()->comment('Nomor Unik Pendidik dan Tenaga Kependidikan');
             $table->enum('employment_status', ['permanent', 'contract', 'honorary'])->default('contract');

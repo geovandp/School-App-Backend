@@ -17,7 +17,7 @@ class User extends Authenticatable
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'role_id',
+        'profile_id',
         'email',
         'password',
         'status',
@@ -36,23 +36,24 @@ class User extends Authenticatable
         ];
     }
 
-    public function role()
-    {
-        return $this->belongsTo(Role::class, 'role_id');
-    }
-
     public function profile()
     {
-        return $this->hasOne(UserProfile::class, 'user_id', 'id');
+        return $this->belongsTo(UserProfile::class, 'profile_id', 'id');
     }
+    
+    // public function role()
+    // {
+    //     return $this->belongsTo(Role::class, 'role_id', 'id');
+    // }
 
-    public function student()
-    {
-        return $this->hasOne(Student::class, 'user_id', 'id');
-    }
 
-    public function teacher()
-    {
-        return $this->hasOne(Teacher::class, 'user_id', 'id');
-    }
+    // public function student()
+    // {
+    //     return $this->hasOne(Student::class, 'profile_id', 'id');
+    // }
+
+    // public function teacher()
+    // {
+    //     return $this->hasOne(Teacher::class, 'profile_id', 'id');
+    // }
 }

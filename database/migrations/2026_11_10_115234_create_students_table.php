@@ -12,11 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('students', function (Blueprint $table) {
-            // $table->id();
-            $table->foreignId('user_id')->primary()->constrained('users')->cascadeOnDelete();
-            $table->string('nisn', 10)->unique()->nullable();
-            $table->string('nis', 10)->unique()->nullable();
-            $table->smallInteger('admission_year')->nullable();
+            $table->id();
+            $table->foreignId('profile_id')
+                ->unique()
+                ->constrained('user_profiles')
+                ->restrictOnDelete();
+            $table->string('nisn', 10)->unique();
+            $table->string('nis', 10)->unique();
+            $table->smallInteger('admission_year');
             $table->timestamps();
         });
     }

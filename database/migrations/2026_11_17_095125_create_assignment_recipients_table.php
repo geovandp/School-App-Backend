@@ -22,8 +22,8 @@ return new class extends Migration
                 ->constrained('assignments')
                 ->cascadeOnDelete();
             $table->foreignId('student_id')
-                ->comment('FK ke students.user_id')
-                ->constrained('students', 'user_id')
+                ->comment('FK ke students.id')
+                ->constrained('students', 'id')
                 ->restrictOnDelete();
             $table->timestamp('assigned_at')->useCurrent();
             $table->enum('status', ['assigned', 'excused', 'canceled'])->default('assigned');

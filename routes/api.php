@@ -17,10 +17,18 @@ Route::prefix('v1')->group(function () {
         Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     });
 
-    // Route proteksi
+    // Route authentikasi setelah login
     Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
+    });
+
+    // Route admin
+    Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+        Route::get('/users', [UserController::class, 'index']);
+        Route::post('/users-create', [UserController::class, 'store']);
+        Route::get('/users-get/{id}', [UserController::class, 'show']);
+        Route::put('/users-update/{id}', [UserController::class, 'update']);
     });
 
     // Route fitur
