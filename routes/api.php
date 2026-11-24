@@ -29,6 +29,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/users-create', [UserController::class, 'store']);
         Route::get('/users-get/{id}', [UserController::class, 'show']);
         Route::put('/users-update/{id}', [UserController::class, 'update']);
+        Route::get('/users-accounts', [UserController::class, 'indexAccount']);
+        Route::get('/users-accounts/{id}', [UserController::class, 'showAccount']);
+        Route::post('/users/{id}/create-account', [UserController::class, 'createAccount']);
+        Route::put('/users-accounts-update/{id}', [UserController::class, 'updateAccount']);
     });
 
     // Route fitur
