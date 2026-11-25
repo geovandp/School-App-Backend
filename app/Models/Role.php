@@ -22,4 +22,9 @@ class Role extends Model
     {
         return $this->hasMany(UserProfile::class, 'role_id', 'id');
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'role_user', 'role_id', 'user_id')->withTimestamps();
+    }
 }
