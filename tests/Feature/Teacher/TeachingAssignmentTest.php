@@ -105,7 +105,7 @@ class TeachingAssignmentTest extends TestCase
             'nis' => '12345',
         ]);
         StudentEnrollment::create([
-            'student_id' => $student->user_id,
+            'student_id' => $student->id,
             'classroom_id' => $this->classroom1->id,
             'enrollment_date' => '2026-07-01',
             'status' => 'active',
@@ -155,7 +155,7 @@ class TeachingAssignmentTest extends TestCase
     public function test_teacher_cannot_view_other_teachers_assignment(): void
     {
         // Teacher 2
-        $teacherRole = Role::firstWhere('nama', 'teacher');
+        $teacherRole = Role::where('code', 'teacher')->orWhere('name', 'teacher')->first();
         $otherTeacherUser = User::factory()->create([
             'role_id' => $teacherRole->id,
             'status' => 'active',

@@ -338,12 +338,7 @@ class DatabaseSeeder extends Seeder
         //     'status' => 'active',
         //     'email_verified_at' => now(),
         // ]);
-        // User::factory()->active()->create([
-        //     'role_id' => 3,
-        //     'email' => 'murid@gmail.com',
-        //     'password' => 'password',
-        //     'status' => 'suspended',
-        //     'email_verified_at' => now(),
-        // ]);
+        // Panggil TeacherSeeder untuk melengkapi modul Guru dan Presensi
+        $this->call(TeacherSeeder::class);
     }
 }

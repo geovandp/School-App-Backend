@@ -16,7 +16,19 @@ class Role extends Model
     protected $fillable = [
         'code',
         'name',
+        'nama',
     ];
+
+    public function setNamaAttribute($value)
+    {
+        $this->attributes['code'] = $value;
+        $this->attributes['name'] = $this->attributes['name'] ?? ucfirst($value);
+    }
+
+    public function getNamaAttribute()
+    {
+        return $this->attributes['code'] ?? $this->attributes['name'] ?? null;
+    }
 
     public function profiles()
     {

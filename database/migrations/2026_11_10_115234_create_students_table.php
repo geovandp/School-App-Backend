@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('students', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('profile_id')
-                ->unique()
-                ->constrained('user_profiles')
-                ->restrictOnDelete();
-            $table->string('nisn', 10)->unique();
-            $table->string('nis', 10)->unique();
-            $table->smallInteger('admission_year');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('students')) {
+            Schema::create('students', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('profile_id')
+                    ->unique()
+                    ->constrained('user_profiles')
+                    ->restrictOnDelete();
+                $table->string('nisn', 10)->unique();
+                $table->string('nis', 10)->unique();
+                $table->smallInteger('admission_year');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

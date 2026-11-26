@@ -14,6 +14,7 @@ class UserProfile extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
+        'user_id',
         'role_id',
         'full_name',
         'preferred_name',
@@ -34,6 +35,9 @@ class UserProfile extends Model
 
     public function user()
     {
+        if ($this->user_id) {
+            return $this->belongsTo(User::class, 'user_id', 'id');
+        }
         return $this->hasOne(User::class, 'profile_id', 'id');
     }
 

@@ -1,0 +1,1822 @@
+{
+    "info": {
+        "_postman_id": "sms-attendance-api-v2-collection",
+        "name": "School Management System - Attendance & Teacher API",
+        "description": "Koleksi lengkap Postman untuk pengujian API School Management System (SMS):\n- Modul Presensi Pegawai & Guru (Geofencing 1 km)\n- Permohonan Izin, Cuti, Sakit, & Koreksi Presensi\n- Panel Approval Admin & Finalisasi Otomatis\n- Manajemen Jadwal Kerja & Kalender Sekolah\n- Modul Akademik Guru",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{auth_token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "item": [
+        {
+            "name": "01. Autentikasi",
+            "description": "Endpoint autentikasi (Login, Profil, Ubah Password, Logout). Login akan otomatis menyimpan token ke environment Postman.",
+            "item": [
+                {
+                    "name": "1. Login User (Auto-save Token)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "login"
+                            ],
+                            "query": []
+                        },
+                        "description": "Login sebagai Guru. Token disimpan ke variable {{auth_token}}.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"guru.aktif@sekolah.sch.id\",\n    \"password\": \"password123\"\n}"
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var json = pm.response.json();",
+                                    "    if (json.access_token) {",
+                                    "        pm.environment.set(\"auth_token\", json.access_token);",
+                                    "        console.log(\"Token tersimpan otomatis di environment: \" + json.access_token);",
+                                    "    }",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "2. Profil User Saat Ini",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "me"
+                            ],
+                            "query": []
+                        },
+                        "description": "Mendapatkan profil dan role user yang sedang login."
+                    }
+                },
+                {
+                    "name": "3. Ganti Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/change-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "change-password"
+                            ],
+                            "query": []
+                        },
+                        "description": "Mengganti password akun user saat ini.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"current_password\": \"password\",\n    \"new_password\": \"PasswordBaru123!\",\n    \"new_password_confirmation\": \"PasswordBaru123!\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "4. Lupa Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/forgot-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "forgot-password"
+                            ],
+                            "query": []
+                        },
+                        "description": "Mengirimkan email reset password.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"guru@sekolah.sch.id\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "5. Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "logout"
+                            ],
+                            "query": []
+                        },
+                        "description": "Menghapus token sesi aktif."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "02. Presensi Pegawai & Guru (Core)",
+            "description": "Endpoint presensi harian untuk Pegawai & Guru. Presensi divalidasi dengan radius maksimal 1 km (1.000m) dari koordinat sekolah.",
+            "item": [
+                {
+                    "name": "1. Status Presensi Hari Ini",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/today",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "today"
+                            ],
+                            "query": []
+                        },
+                        "description": "Mengambil status sesi hari ini, jadwal kerja, toleransi keterlambatan, dan event yang sudah tercatat."
+                    }
+                },
+                {
+                    "name": "2. Check-in (Masuk Kerja) - Dalam Radius 1km",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/check-in",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "check-in"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melakukan presensi masuk. Koordinat valid < 1km dari sekolah.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"latitude\": -6.209,\n    \"longitude\": 106.8457,\n    \"device_identifier\": \"Postman-Testing-Device\",\n    \"reason\": \"Masuk reguler\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "2b. Check-in - Luar Radius (Simulasi Ditolak)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/check-in",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "check-in"
+                            ],
+                            "query": []
+                        },
+                        "description": "Simulasi presensi di luar radius 1km (misal jarak 5km) untuk verifikasi geofencing.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"latitude\": -6.25,\n    \"longitude\": 106.8456,\n    \"device_identifier\": \"Postman-Testing-Device\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "3. Keluar Sementara (Istirahat / Urusan Luar)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/temporary-check-out",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "temporary-check-out"
+                            ],
+                            "query": []
+                        },
+                        "description": "Mencatat saat pegawai keluar sementara di jam kerja.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"latitude\": -6.2088,\n    \"longitude\": 106.8456,\n    \"device_identifier\": \"Postman-Testing-Device\",\n    \"reason\": \"Makan siang / Tugas dinas luar sebentar\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "4. Masuk Kembali (Selesai Keluar Sementara)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/return-check-in",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "return-check-in"
+                            ],
+                            "query": []
+                        },
+                        "description": "Mencatat saat pegawai kembali ke sekolah setelah keluar sementara.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"latitude\": -6.2088,\n    \"longitude\": 106.8456,\n    \"device_identifier\": \"Postman-Testing-Device\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "5. Check-out Pulang (Selesai Jam Kerja)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/final-check-out",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "final-check-out"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melakukan presensi kepulangan di akhir jam kerja.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"latitude\": -6.2088,\n    \"longitude\": 106.8456,\n    \"device_identifier\": \"Postman-Testing-Device\",\n    \"reason\": \"Selesai tugas mengajar\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "6. Riwayat Presensi Pribadi",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/history?start_date=2026-11-01&end_date=2026-11-30&per_page=15",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "history"
+                            ],
+                            "query": [
+                                {
+                                    "key": "start_date",
+                                    "value": "2026-11-01",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "end_date",
+                                    "value": "2026-11-30",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "15",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "description": "Melihat daftar riwayat presensi pegawai dengan filter tanggal/status."
+                    }
+                },
+                {
+                    "name": "7. Detail Sesi Presensi",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/sessions/{{session_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "sessions",
+                                "{{session_id}}"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat detail lengkap satu sesi presensi termasuk seluruh event log dan pelanggaran."
+                    }
+                },
+                {
+                    "name": "8. Rekap Presensi Personal",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/recap?start_date=2026-11-01&end_date=2026-11-30",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "recap"
+                            ],
+                            "query": [
+                                {
+                                    "key": "start_date",
+                                    "value": "2026-11-01",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "end_date",
+                                    "value": "2026-11-30",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "description": "Melihat rekap akumulasi kehadiran personal (Hadir, Terlambat, Izin, Sakit, Alpha, Total Menit Kerja)."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "03. Permohonan Presensi (Requests)",
+            "description": "Pengajuan izin, sakit, cuti, dinas luar, atau dispensasi keterlambatan/pulang cepat oleh pegawai.",
+            "item": [
+                {
+                    "name": "1. Ajukan Permohonan Izin / Cuti / Sakit",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/requests",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "requests"
+                            ],
+                            "query": []
+                        },
+                        "description": "Mengajukan izin dengan tipe: izin, sakit, cuti, datang_terlambat, keluar_sementara, pulang_awal, dinas_luar.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"request_type\": \"izin\",\n    \"start_at\": \"2026-12-01 07:00:00\",\n    \"end_at\": \"2026-12-01 15:00:00\",\n    \"reason\": \"Menghadiri undangan kedinasan / seminar MGMP\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "2. Daftar Permohonan Pribadi",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/requests?request_status=pending&per_page=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "requests"
+                            ],
+                            "query": [
+                                {
+                                    "key": "request_status",
+                                    "value": "pending",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "10",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "description": "Melihat riwayat permohonan yang pernah diajukan pegawai."
+                    }
+                },
+                {
+                    "name": "3. Detail Permohonan",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/requests/{{request_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "requests",
+                                "{{request_id}}"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat status verifikasi, catatan approver, dan sesi terkait."
+                    }
+                },
+                {
+                    "name": "4. Batalkan Permohonan",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/requests/{{request_id}}/cancel",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "requests",
+                                "{{request_id}}",
+                                "cancel"
+                            ],
+                            "query": []
+                        },
+                        "description": "Membatalkan permohonan yang masih berstatus pending."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "04. Koreksi Presensi (Adjustments)",
+            "description": "Pengajuan perbaikan presensi jika terjadi kendala teknis (lupa check-in/out, GPS error, dll).",
+            "item": [
+                {
+                    "name": "1. Ajukan Koreksi Presensi",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/adjustments",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "adjustments"
+                            ],
+                            "query": []
+                        },
+                        "description": "Mengajukan koreksi waktu check-in atau check-out pada sesi tertentu.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"attendance_session_id\": 1,\n    \"adjustment_type\": \"koreksi_check_in\",\n    \"corrected_event_type\": \"check_in\",\n    \"corrected_event_at\": \"2026-11-25 07:02:00\",\n    \"reason\": \"Lupa presensi saat tiba di sekolah karena ada apel pagi\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "2. Daftar Koreksi Presensi Pribadi",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/adjustments",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "adjustments"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat daftar status permohonan koreksi presensi pribadi."
+                    }
+                },
+                {
+                    "name": "3. Detail Koreksi Presensi",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/attendance/adjustments/{{adjustment_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "attendance",
+                                "adjustments",
+                                "{{adjustment_id}}"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat detail status persetujuan koreksi."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "05. Admin - Persetujuan (Approvals)",
+            "description": "Panel Kepala Sekolah / Bagian Kepegawaian (HRD) untuk memproses permohonan izin dan koreksi presensi.",
+            "item": [
+                {
+                    "name": "1. Daftar Permohonan Menunggu Persetujuan",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance-approvals?request_status=pending&per_page=15",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance-approvals"
+                            ],
+                            "query": [
+                                {
+                                    "key": "request_status",
+                                    "value": "pending",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "15",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "description": "Melihat daftar permohonan izin/cuti pegawai yang berstatus pending."
+                    }
+                },
+                {
+                    "name": "2. Detail Pengajuan Permohonan",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance-approvals/{{request_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance-approvals",
+                                "{{request_id}}"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat rincian surat izin, alasan, dan sesi tanggal kerja yang terdampak."
+                    }
+                },
+                {
+                    "name": "3. Setujui Permohonan (Approve)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance-approvals/{{request_id}}/approve",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance-approvals",
+                                "{{request_id}}",
+                                "approve"
+                            ],
+                            "query": []
+                        },
+                        "description": "Menyetujui permohonan. Sistem otomatis memperbarui status sesi presensi menjadi I, S, atau C.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"approval_note\": \"Disetujui. Harap menyerahkan surat tugas fisik setelah kegiatan.\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "4. Tolak Permohonan (Reject)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance-approvals/{{request_id}}/reject",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance-approvals",
+                                "{{request_id}}",
+                                "reject"
+                            ],
+                            "query": []
+                        },
+                        "description": "Menolak permohonan izin pegawai dengan memberikan alasan penolakan.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"approval_note\": \"Ditolak karena berbenturan dengan agenda ujian sekolah.\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "5. Daftar Pengajuan Koreksi Presensi",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance-adjustments",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance-adjustments"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat daftar permohonan koreksi waktu presensi."
+                    }
+                },
+                {
+                    "name": "6. Detail Pengajuan Koreksi",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance-adjustments/{{adjustment_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance-adjustments",
+                                "{{adjustment_id}}"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat detail perbaikan data presensi."
+                    }
+                },
+                {
+                    "name": "7. Setujui Koreksi Presensi",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance-adjustments/{{adjustment_id}}/approve",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance-adjustments",
+                                "{{adjustment_id}}",
+                                "approve"
+                            ],
+                            "query": []
+                        },
+                        "description": "Menyetujui koreksi. Sistem akan membuat event presensi koreksi dan menghitung ulang durasi kerja."
+                    }
+                },
+                {
+                    "name": "8. Tolak Koreksi Presensi",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance-adjustments/{{adjustment_id}}/reject",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance-adjustments",
+                                "{{adjustment_id}}",
+                                "reject"
+                            ],
+                            "query": []
+                        },
+                        "description": "Menolak koreksi presensi.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"note\": \"Bukti aktivitas pada CCTV tidak sesuai waktu yang diajukan.\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "06. Admin - Monitoring & Rekap Presensi",
+            "description": "Panel administrator untuk melihat seluruh kehadiran pegawai, rekap, pelanggaran, dan finalisasi otomatis.",
+            "item": [
+                {
+                    "name": "1. Daftar Sesi Presensi Semua Pegawai",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance/sessions?date=2026-11-25&per_page=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance",
+                                "sessions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "date",
+                                    "value": "2026-11-25",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "20",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "description": "Melihat status presensi seluruh pegawai pada tanggal tertentu."
+                    }
+                },
+                {
+                    "name": "2. Detail Sesi Presensi Pegawai",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance/sessions/{{session_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance",
+                                "sessions",
+                                "{{session_id}}"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat riwayat event, lokasi, toleransi, dan status sesi pegawai tertentu."
+                    }
+                },
+                {
+                    "name": "3. Rekapitulasi Presensi Seluruh Pegawai",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance/recap?start_date=2026-11-01&end_date=2026-11-30",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance",
+                                "recap"
+                            ],
+                            "query": [
+                                {
+                                    "key": "start_date",
+                                    "value": "2026-11-01",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "end_date",
+                                    "value": "2026-11-30",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "description": "Laporan rekap presensi untuk payroll atau laporan bulanan sekolah."
+                    }
+                },
+                {
+                    "name": "4. Daftar Pelanggaran Presensi",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance/violations?status_review=pending",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance",
+                                "violations"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status_review",
+                                    "value": "pending",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "description": "Melihat log pegawai yang terlambat, pulang awal, atau di luar radius geofencing."
+                    }
+                },
+                {
+                    "name": "5. Review Pelanggaran Presensi",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance/violations/1/review",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance",
+                                "violations",
+                                "1",
+                                "review"
+                            ],
+                            "query": []
+                        },
+                        "description": "Meninjau dan memberi status catatan pada pelanggaran presensi.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status_review\": \"excused\",\n    \"review_notes\": \"Dimaafkan karena sedang terjadi kemacetan luar biasa akibat banjir.\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "6. Finalisasi Presensi Harian (Auto-Alpha & Tutup Sesi)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/attendance/finalize",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "attendance",
+                                "finalize"
+                            ],
+                            "query": []
+                        },
+                        "description": "Menjalankan evaluasi akhir hari untuk menandai Alpha (A) bagi yang tidak hadir dan menutup sesi (TAP/TAPT).",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"date\": \"2026-11-25\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "07. Admin - Jadwal Kerja & Kalender",
+            "description": "Konfigurasi master jadwal kerja (jam masuk, jam pulang, toleransi) dan kalender libur sekolah.",
+            "item": [
+                {
+                    "name": "1. Daftar Master Jadwal Kerja",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/work-schedules",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "work-schedules"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat semua kelompok jadwal kerja (Guru, Tenaga Kependidikan, Security, dll)."
+                    }
+                },
+                {
+                    "name": "2. Buat Master Jadwal Kerja Baru",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/work-schedules",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "work-schedules"
+                            ],
+                            "query": []
+                        },
+                        "description": "Menambahkan pola jadwal kerja baru.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Jadwal Reguler Guru 2026\",\n    \"start_time\": \"07:00:00\",\n    \"end_time\": \"15:00:00\",\n    \"check_in_open_minutes\": 60,\n    \"late_tolerance_minutes\": 15,\n    \"early_leave_tolerance_minutes\": 0,\n    \"days_of_week\": [\n        1,\n        2,\n        3,\n        4,\n        5\n    ]\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "3. Detail Master Jadwal Kerja",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/work-schedules/{{work_schedule_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "work-schedules",
+                                "{{work_schedule_id}}"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat jam kerja dan hari aktif jadwal."
+                    }
+                },
+                {
+                    "name": "4. Update Master Jadwal Kerja",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/work-schedules/{{work_schedule_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "work-schedules",
+                                "{{work_schedule_id}}"
+                            ],
+                            "query": []
+                        },
+                        "description": "Memperbarui toleransi atau jam kerja jadwal.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Jadwal Reguler Guru 2026 (Revisi)\",\n    \"start_time\": \"07:00:00\",\n    \"end_time\": \"15:00:00\",\n    \"late_tolerance_minutes\": 15,\n    \"days_of_week\": [\n        1,\n        2,\n        3,\n        4,\n        5\n    ]\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "5. Tetapkan Jadwal ke Pegawai (Assignment)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/employee-work-schedules",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "employee-work-schedules"
+                            ],
+                            "query": []
+                        },
+                        "description": "Menetapkan jadwal kerja tertentu kepada pegawai atau guru.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"employee_id\": 1,\n    \"work_schedule_id\": 1,\n    \"effective_from\": \"2026-01-01\",\n    \"effective_until\": null\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "6. Daftar Hari Kalender Sekolah",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/school-calendar?start_date=2026-01-01&end_date=2026-12-31",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "school-calendar"
+                            ],
+                            "query": [
+                                {
+                                    "key": "start_date",
+                                    "value": "2026-01-01",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "end_date",
+                                    "value": "2026-12-31",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "description": "Melihat daftar hari libur nasional atau cuti bersama sekolah."
+                    }
+                },
+                {
+                    "name": "7. Tetapkan Hari Libur / Kalender Sekolah",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/school-calendar",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "school-calendar"
+                            ],
+                            "query": []
+                        },
+                        "description": "Menandai suatu hari sebagai libur atau hari kerja khusus.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"calendar_date\": \"2026-12-25\",\n    \"day_type\": \"holiday\",\n    \"is_working_day\": false,\n    \"description\": \"Libur Nasional Hari Raya Natal\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "08. Modul Guru (Akademik & Kelas)",
+            "description": "Endpoint modul akademik guru (Dashboard, Jadwal Pelajaran, Kelas, Tugas, Jurnal Mengajar).",
+            "item": [
+                {
+                    "name": "1. Dashboard Guru",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/teacher/dashboard",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "teacher",
+                                "dashboard"
+                            ],
+                            "query": []
+                        },
+                        "description": "Statistik ringkas tugas, jadwal hari ini, dan aktivitas mengajar."
+                    }
+                },
+                {
+                    "name": "2. Seluruh Jadwal Mengajar Guru",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/teacher/schedules",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "teacher",
+                                "schedules"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat jadwal mengajar guru per hari/minggu."
+                    }
+                },
+                {
+                    "name": "3. Jadwal Mengajar Guru Hari Ini",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/teacher/schedules/today",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "teacher",
+                                "schedules",
+                                "today"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat kelas yang harus diajar hari ini."
+                    }
+                },
+                {
+                    "name": "4. Daftar Tugas Mengajar",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/teacher/teaching-assignments",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "teacher",
+                                "teaching-assignments"
+                            ],
+                            "query": []
+                        },
+                        "description": "Daftar mata pelajaran dan kelas yang diampu guru."
+                    }
+                },
+                {
+                    "name": "5. Detail Tugas Mengajar",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/teacher/teaching-assignments/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "teacher",
+                                "teaching-assignments",
+                                "1"
+                            ],
+                            "query": []
+                        },
+                        "description": "Detail mata pelajaran dan kurikulum yang diampu."
+                    }
+                },
+                {
+                    "name": "6. Daftar Kelas yang Diampu",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/teacher/classrooms",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "teacher",
+                                "classrooms"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat kelas tempat guru mengajar."
+                    }
+                },
+                {
+                    "name": "7. Daftar Siswa dalam Kelas",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/teacher/classrooms/1/students",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "teacher",
+                                "classrooms",
+                                "1",
+                                "students"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat nama dan identitas siswa yang ada di kelas tertentu."
+                    }
+                },
+                {
+                    "name": "8. Daftar Tugas Siswa",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/teacher/assignments",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "teacher",
+                                "assignments"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat tugas pekerjaan rumah / ujian yang dibuat guru."
+                    }
+                },
+                {
+                    "name": "9. Buat Tugas Siswa Baru",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/teacher/assignments",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "teacher",
+                                "assignments"
+                            ],
+                            "query": []
+                        },
+                        "description": "Membuat tugas untuk kelas tertentu.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"teaching_assignment_id\": 1,\n    \"title\": \"Tugas 1: Pengenalan Konsep Dasar\",\n    \"description\": \"Kerjakan soal latihan bab 1 di buku paket halaman 12.\",\n    \"due_date\": \"2026-12-05 23:59:00\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "10. Daftar Jurnal Mengajar Guru",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/teacher/learning-journals",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "teacher",
+                                "learning-journals"
+                            ],
+                            "query": []
+                        },
+                        "description": "Melihat rekaman jurnal kegiatan belajar mengajar."
+                    }
+                },
+                {
+                    "name": "11. Buat Jurnal Mengajar Baru",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/teacher/learning-journals",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "teacher",
+                                "learning-journals"
+                            ],
+                            "query": []
+                        },
+                        "description": "Mencatat materi KBM yang baru saja selesai diajarkan.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"teaching_assignment_id\": 1,\n    \"learning_date\": \"2026-11-25\",\n    \"topic\": \"Pengenalan Algoritma Dasar\",\n    \"learning_objective\": \"Siswa memahami konsep runtunan instruksi\",\n    \"learning_activities\": \"Pemaparan materi dan latihan kelompok\",\n    \"status\": \"completed\"\n}"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

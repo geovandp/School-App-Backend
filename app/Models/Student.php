@@ -14,6 +14,7 @@ class Student extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
+        'user_id',
         'profile_id',
         'nisn',
         'nis',
@@ -25,6 +26,11 @@ class Student extends Model
         return [
             'admission_year' => 'integer',
         ];
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function profile()

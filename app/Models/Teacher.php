@@ -16,6 +16,7 @@ class Teacher extends Model
     protected $fillable = [
         'profile_id',
         'employee_id',
+        'user_id',
         'nip',
         'nuptk',
         'employment_status',
@@ -37,6 +38,11 @@ class Teacher extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function teachingAssignments(): HasMany

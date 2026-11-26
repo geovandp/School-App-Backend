@@ -43,4 +43,7 @@ Route::prefix('v1')->group(function () {
     // Teacher API Routes
     require __DIR__.'/teacher.php';
 
+    // Employee Attendance API Routes
+    require __DIR__.'/attendance.php';
+
 });

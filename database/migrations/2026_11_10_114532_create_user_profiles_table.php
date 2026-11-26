@@ -11,21 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_profiles', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('role_id')
-                ->constrained('roles')
-                ->restrictOnDelete();
-            $table->string('full_name');
-            $table->string('preferred_name')->nullable();
-            $table->enum('gender', ['Male', 'Female'])->nullable();
-            $table->string('birth_place')->nullable();
-            $table->date('birth_date')->nullable();
-            $table->string('address')->nullable();
-            $table->string('phone')->nullable();
-            $table->string('avatar_path')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('user_profiles')) {
+            Schema::create('user_profiles', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('role_id')
+                    ->constrained('roles')
+                    ->restrictOnDelete();
+                $table->string('full_name');
+                $table->string('preferred_name')->nullable();
+                $table->enum('gender', ['Male', 'Female'])->nullable();
+                $table->string('birth_place')->nullable();
+                $table->date('birth_date')->nullable();
+                $table->string('address')->nullable();
+                $table->string('phone')->nullable();
+                $table->string('avatar_path')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

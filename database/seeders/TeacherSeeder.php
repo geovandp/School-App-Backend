@@ -6,6 +6,8 @@ use App\Models\AcademicYear;
 use App\Models\Classroom;
 use App\Models\Course;
 use App\Models\CourseSchedule;
+use App\Models\Employee;
+use App\Models\EmployeeWorkSchedule;
 use App\Models\GradeLevel;
 use App\Models\LearningJournal;
 use App\Models\Major;
@@ -20,53 +22,174 @@ use App\Models\TeacherSkill;
 use App\Models\TeachingAssignment;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Models\WorkSchedule;
+use App\Models\WorkScheduleDay;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class TeacherSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Pastikan Role Teacher ada
-        $teacherRole = Role::firstOrCreate(['name' => 'teacher']);
+        // 1. Roles (Teacher, Student, Admin)
+        $teacherRole = Role::where('code', 'teacher')->orWhere('name', 'teacher')->first()
+            ?? Role::create(['code' => 'teacher', 'name' => 'Guru']);
 
-        // 2. Buat User Guru Aktif
+        $studentRole = Role::where('code', 'student')->orWhere('name', 'student')->first()
+            ?? Role::create(['code' => 'student', 'name' => 'Siswa']);
+
+        $adminRole = Role::where('code', 'admin')->orWhere('name', 'admin')->first()
+            ?? Role::create(['code' => 'admin', 'name' => 'Administrator']);
+
+        // 2. Akun Guru Aktif
+        $teacherUserData = [
+            'password' => Hash::make('password123'),
+            'status' => 'active',
+            'email_verified_at' => now(),
+        ];
+        if (Schema::hasColumn('users', 'role_id')) {
+            $teacherUserData['role_id'] = $teacherRole->id;
+        }
+
         $teacherUser = User::updateOrCreate(
             ['email' => 'guru.aktif@sekolah.sch.id'],
-            [
-                'role_id' => $teacherRole->id,
-                'password' => Hash::make('password123'),
-                'status' => 'active',
-                'email_verified_at' => now(),
-            ]
+            $teacherUserData
         );
+
+        if (method_exists($teacherUser, 'roles') && Schema::hasTable('role_user')) {
+            $teacherUser->roles()->syncWithoutDetaching([$teacherRole->id]);
+        }
 
         // Profil Guru
-        UserProfile::updateOrCreate(
+        $teacherProfileData = [
+            'full_name' => 'Budi Santoso, S.Pd.',
+            'preferred_name' => 'Pak Budi',
+            'gender' => 'Male',
+            'birth_place' => 'Jakarta',
+            'birth_date' => '1985-05-12',
+            'address' => 'Jl. Pendidikan No. 45',
+            'phone' => '081298765432',
+        ];
+        if (Schema::hasColumn('user_profiles', 'role_id')) {
+            $teacherProfileData['role_id'] = $teacherRole->id;
+        }
+
+        $teacherProfile = UserProfile::updateOrCreate(
             ['user_id' => $teacherUser->id],
-            [
-                'full_name' => 'Budi Santoso, S.Pd.',
-                'preferred_name' => 'Pak Budi',
-                'gender' => 'Male',
-                'birth_place' => 'Jakarta',
-                'birth_date' => '1985-05-12',
-                'address' => 'Jl. Pendidikan No. 45',
-                'phone' => '081298765432',
-            ]
+            $teacherProfileData
         );
 
-        // Data Record Teacher
+        if (Schema::hasColumn('users', 'profile_id')) {
+            $teacherUser->update(['profile_id' => $teacherProfile->id]);
+        }
+
+        // 3. Employee & Modul Presensi (Attendance Setup)
+        $employee = null;
+        if (Schema::hasTable('employees')) {
+            $employee = Employee::updateOrCreate(
+                ['user_id' => $teacherUser->id],
+                [
+                    'employee_number' => 'EMP-198505122010011002',
+                    'employment_status' => 'permanent',
+                ]
+            );
+        }
+
+        // Record Teacher
+        $teacherData = [
+            'nip' => '198505122010011002',
+            'nuptk' => '4536763665200002',
+            'employment_status' => 'permanent',
+            'hire_date' => '2010-01-01',
+        ];
+        if (Schema::hasColumn('teachers', 'profile_id')) {
+            $teacherData['profile_id'] = $teacherProfile->id;
+        }
+        if ($employee && Schema::hasColumn('teachers', 'employee_id')) {
+            $teacherData['employee_id'] = $employee->id;
+        }
+
         $teacher = Teacher::updateOrCreate(
             ['user_id' => $teacherUser->id],
-            [
-                'nip' => '198505122010011002',
-                'nuptk' => '4536763665200002',
-                'employment_status' => 'permanent',
-                'hire_date' => '2010-01-01',
-            ]
+            $teacherData
         );
 
-        // 3. Pastikan Master Akademik Ada
+        // Jadwal Kerja Presensi (Work Schedule)
+        if ($employee && Schema::hasTable('work_schedules') && Schema::hasTable('employee_work_schedules')) {
+            $schedule = WorkSchedule::firstOrCreate(
+                ['name' => 'Jadwal Reguler Guru'],
+                [
+                    'start_time' => '07:00:00',
+                    'end_time' => '15:00:00',
+                    'check_in_open_minutes' => 60,
+                    'late_tolerance_minutes' => 15,
+                    'evaluation_after_minutes' => 120,
+                    'is_active' => true,
+                ]
+            );
+
+            if (Schema::hasTable('work_schedule_days')) {
+                // Hari Senin - Minggu (1-7) aktif agar pengujian presensi di hari apa pun selalu valid
+                for ($day = 1; $day <= 7; $day++) {
+                    WorkScheduleDay::firstOrCreate([
+                        'work_schedule_id' => $schedule->id,
+                        'day_of_week' => $day,
+                    ]);
+                }
+            }
+
+            EmployeeWorkSchedule::updateOrCreate(
+                [
+                    'employee_id' => $employee->id,
+                    'work_schedule_id' => $schedule->id,
+                ],
+                [
+                    'effective_from' => '2026-01-01',
+                    'effective_until' => null,
+                ]
+            );
+        }
+
+        // 4. Akun Admin (Untuk Pengujian Approval & Rekap Presensi)
+        $adminUserData = [
+            'password' => Hash::make('password123'),
+            'status' => 'active',
+            'email_verified_at' => now(),
+        ];
+        if (Schema::hasColumn('users', 'role_id')) {
+            $adminUserData['role_id'] = $adminRole->id;
+        }
+
+        $adminUser = User::updateOrCreate(
+            ['email' => 'admin@sekolah.sch.id'],
+            $adminUserData
+        );
+
+        if (method_exists($adminUser, 'roles') && Schema::hasTable('role_user')) {
+            $adminUser->roles()->syncWithoutDetaching([$adminRole->id]);
+        }
+
+        $adminProfileData = [
+            'full_name' => 'Administrator Sekolah',
+            'preferred_name' => 'Admin',
+            'gender' => 'Male',
+            'phone' => '081234567890',
+        ];
+        if (Schema::hasColumn('user_profiles', 'role_id')) {
+            $adminProfileData['role_id'] = $adminRole->id;
+        }
+
+        $adminProfile = UserProfile::updateOrCreate(
+            ['user_id' => $adminUser->id],
+            $adminProfileData
+        );
+
+        if (Schema::hasColumn('users', 'profile_id')) {
+            $adminUser->update(['profile_id' => $adminProfile->id]);
+        }
+
+        // 5. Master Akademik
         $academicYear = AcademicYear::firstOrCreate(
             ['start_date' => '2026-07-15'],
             [
@@ -97,7 +220,7 @@ class TeacherSeeder extends Seeder
             ]
         );
 
-        // 4. Master Course (Mata Pelajaran)
+        // 6. Master Mata Pelajaran (Course)
         $course1 = Course::firstOrCreate(
             ['code' => 'PROG-10'],
             [
@@ -116,7 +239,7 @@ class TeacherSeeder extends Seeder
             ]
         );
 
-        // 5. Teaching Assignments
+        // 7. Penugasan Mengajar (Teaching Assignments)
         $assignment1 = TeachingAssignment::firstOrCreate(
             [
                 'classroom_id' => $classroom1->id,
@@ -135,7 +258,7 @@ class TeacherSeeder extends Seeder
             ['status' => 'active']
         );
 
-        // 6. Master Ruangan & Jam Pelajaran
+        // 8. Ruangan & Jam Pelajaran
         $room1 = Room::firstOrCreate(
             ['code' => 'LAB-RPL'],
             [
@@ -170,20 +293,8 @@ class TeacherSeeder extends Seeder
             ]
         );
 
-        $period3 = SchedulePeriod::firstOrCreate(
-            [
-                'academic_year_id' => $academicYear->id,
-                'period_number' => 3,
-            ],
-            [
-                'name' => 'Jam Ke-3',
-                'start_time' => '08:45:00',
-                'end_time' => '09:30:00',
-            ]
-        );
-
-        // 7. Jadwal Pelajaran (termasuk jadwal hari ini berdasarkan nama hari)
-        $todayDay = strtolower(now()->englishDayOfWeek); // e.g. tuesday, monday, etc.
+        // 9. Jadwal Mengajar Hari Ini
+        $todayDay = strtolower(now()->englishDayOfWeek);
 
         CourseSchedule::updateOrCreate(
             [
@@ -200,40 +311,61 @@ class TeacherSeeder extends Seeder
             ]
         );
 
-        // 8. Dummy Siswa & Enrollment untuk kelas X RPL 1
-        $studentRole = Role::firstOrCreate(['name' => 'student']);
+        // 10. Siswa & Enrollment Kelas
         for ($i = 1; $i <= 3; $i++) {
+            $studentUserData = [
+                'password' => Hash::make('password123'),
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ];
+            if (Schema::hasColumn('users', 'role_id')) {
+                $studentUserData['role_id'] = $studentRole->id;
+            }
+
             $studentUser = User::updateOrCreate(
                 ['email' => "siswa{$i}@sekolah.sch.id"],
-                [
-                    'role_id' => $studentRole->id,
-                    'password' => Hash::make('password123'),
-                    'status' => 'active',
-                    'email_verified_at' => now(),
-                ]
+                $studentUserData
             );
 
-            UserProfile::updateOrCreate(
+            if (method_exists($studentUser, 'roles') && Schema::hasTable('role_user')) {
+                $studentUser->roles()->syncWithoutDetaching([$studentRole->id]);
+            }
+
+            $studentProfileData = [
+                'full_name' => "Siswa Siswi {$i}",
+                'preferred_name' => "Siswa {$i}",
+                'gender' => $i % 2 === 0 ? 'Female' : 'Male',
+            ];
+            if (Schema::hasColumn('user_profiles', 'role_id')) {
+                $studentProfileData['role_id'] = $studentRole->id;
+            }
+
+            $studentProfile = UserProfile::updateOrCreate(
                 ['user_id' => $studentUser->id],
-                [
-                    'full_name' => "Siswa Siswi {$i}",
-                    'preferred_name' => "Siswa {$i}",
-                    'gender' => $i % 2 === 0 ? 'Female' : 'Male',
-                ]
+                $studentProfileData
             );
+
+            if (Schema::hasColumn('users', 'profile_id')) {
+                $studentUser->update(['profile_id' => $studentProfile->id]);
+            }
+
+            $studentData = [
+                'nisn' => '009876543' . $i,
+                'nis' => '202600' . $i,
+                'admission_year' => 2026,
+            ];
+            if (Schema::hasColumn('students', 'profile_id')) {
+                $studentData['profile_id'] = $studentProfile->id;
+            }
 
             $student = Student::updateOrCreate(
                 ['user_id' => $studentUser->id],
-                [
-                    'nisn' => '009876543' . $i,
-                    'nis' => '202600' . $i,
-                    'admission_year' => 2026,
-                ]
+                $studentData
             );
 
             StudentEnrollment::updateOrCreate(
                 [
-                    'student_id' => $student->user_id,
+                    'student_id' => $student->id,
                     'classroom_id' => $classroom1->id,
                 ],
                 [
@@ -243,7 +375,7 @@ class TeacherSeeder extends Seeder
             );
         }
 
-        // 9. Jurnal Pembelajaran Dummy
+        // 11. Jurnal Pembelajaran
         LearningJournal::updateOrCreate(
             [
                 'teaching_assignment_id' => $assignment1->id,
@@ -261,7 +393,7 @@ class TeacherSeeder extends Seeder
             ]
         );
 
-        // 10. Skills
+        // 12. Keahlian Guru (Skills)
         $skill1 = Skill::firstOrCreate(['name' => 'Web Development']);
         $skill2 = Skill::firstOrCreate(['name' => 'Database Design']);
 

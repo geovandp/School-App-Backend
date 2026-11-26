@@ -79,7 +79,7 @@ class EmployeeAttendanceSession extends Model
 
     public function events(): HasMany
     {
-        return $this->hasMany(EmployeeAttendanceEvent::class, 'attendance_session_id', 'id')->orderBy('event_at');
+        return $this->hasMany(EmployeeAttendanceEvent::class, 'attendance_session_id', 'id');
     }
 
     public function requests(): BelongsToMany
